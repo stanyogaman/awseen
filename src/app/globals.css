@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+body { color: #0b0b0c; background: #ffffff; }
+a { text-underline-offset: 3px; }
+
+.prose p { margin: 0.75rem 0; line-height: 1.75rem; }
+.prose ul { margin: 0.75rem 0; padding-left: 1.25rem; }
+.prose li { margin: 0.25rem 0; }
