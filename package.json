@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/better-sqlite3": "^7.6.9"
     "@paypal/react-paypal-js": "^8.8.1",
     "better-sqlite3": "^11.6.0",
     "lucide-react": "^0.474.0",
