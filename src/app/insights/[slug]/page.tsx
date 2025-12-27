@@ -1,22 +1,16 @@
 import Link from "next/link";
-import { Container } from "@/components/Container";
-import { getArticle } from "@/lib/db";
+import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
+import { getArticle } from "@/lib/db";
+import { Container } from "@/components/Container";
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-}
 
-  const item = getArticle(params.slug);
+  const item = getArticle(slug);
 
   if (!item || item.kind !== "insight") {
-    return (
-      <section className="py-12">
-        <Container>
-          <div className="max-w-3xl">Not found.</div>
-        </Container>
-      </section>
-    );
+    return notFound();
   }
 
   return (
@@ -38,13 +32,18 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               Start the short quiz to see whether a full audit makes sense.
             </div>
             <div className="mt-3">
-              <Link href="/quiz" className="inline-flex items-center gap-2 rounded-2xl bg-black text-white px-5 py-3 hover:opacity-90">
-                Start the Audit Quiz <ArrowRight size={16}/>
+              <Link
+                href="/quiz"
+                className="inline-flex items-center gap-2 rounded-2xl bg-black text-white px-5 py-3 hover:opacity-90"
+              >
+                Start the Audit Quiz <ArrowRight size={16} />
               </Link>
             </div>
           </div>
 
-          <Link href="/insights" className="hover:underline">← Back to Insights</Link>
+          <Link href="/insights" className="hover:underline">
+            ← Back to Insights
+          </Link>
         </article>
       </Container>
     </section>
