@@ -3,7 +3,10 @@ import { Container } from "@/components/Container";
 import { getArticle } from "@/lib/db";
 import { ArrowRight } from "lucide-react";
 
-export default function InsightPage({ params }: { params: { slug: string } }) {
+export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+}
+
   const item = getArticle(params.slug);
 
   if (!item || item.kind !== "insight") {
