@@ -8,13 +8,26 @@ const ContactLeadSchema = z.object({
   email: z.string().email().optional().nullable(),
   telegram: z.string().max(120).optional().nullable(),
   business: z.string().max(160).optional().default(""),
-  plan: z.string().max(120).optional().default(""),
-  message: z.string().max(3000).optional().default(""),
-  source: z.string().max(80).optional().default("awseen_landing"),
+  plan: z.string().max(160).optional().default(""),
+  message: z.string().max(5000).optional().default(""),
+  source: z.string().max(100).optional().default("awseen_landing"),
 });
 
 function uid() {
-  return "ct_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+  return "lead_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
+
+async function postWebhook(url: string | undefined, payload: unknown) {
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    console.warn("Lead webhook failed", error);
+  }
 }
 
 export async function POST(req: Request) {
@@ -30,25 +43,35 @@ export async function POST(req: Request) {
   const created_at = new Date().toISOString();
   const leadContact = payload.email || payload.telegram || payload.contact;
 
+  const lead = {
+    id,
+    created_at,
+    name: payload.name,
+    contact: payload.contact,
+    email: payload.email,
+    telegram: payload.telegram,
+    business: payload.business,
+    plan: payload.plan,
+    message: payload.message,
+    source: payload.source,
+    status: "new",
+    crm_note: `Новая заявка AWSEEN: ${payload.name} / ${payload.plan || "без выбранного пакета"}`,
+  };
+
   insertLead({
     id,
     created_at,
     email: leadContact,
-    payload_json: JSON.stringify(payload),
+    payload_json: JSON.stringify(lead),
   });
 
-  const webhook = process.env.LEADS_WEBHOOK_URL;
-  if (webhook) {
-    try {
-      await fetch(webhook, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, created_at, ...payload }),
-      });
-    } catch (error) {
-      console.warn("Contact webhook failed", error);
-    }
-  }
+  await Promise.all([
+    postWebhook(process.env.LEADS_WEBHOOK_URL, lead),
+    postWebhook(process.env.GOOGLE_SHEETS_WEBHOOK_URL, lead),
+    postWebhook(process.env.YANDEX_TABLES_WEBHOOK_URL, lead),
+    postWebhook(process.env.CRM_WEBHOOK_URL, lead),
+    postWebhook(process.env.TELEGRAM_WEBHOOK_URL, lead),
+  ]);
 
   return NextResponse.json({ ok: true, leadId: id });
 }
